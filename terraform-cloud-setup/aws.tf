@@ -1,7 +1,9 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# Configure the AWS Provider
 provider "aws" {
+  region = "us-east-1"
 }
 
 # Data source used to grab the TLS certificate for Terraform Cloud.

@@ -46,3 +46,14 @@ resource "tfe_variable" "tfc_aws_role_arn" {
 
   description = "The AWS role arn runs will use to authenticate."
 }
+
+resource "tfe_variable" "aws_region" {
+  count        = length(var.tfc_workspaces)
+  workspace_id = element(tfe_workspace.workspaces[*].id, count.index)
+
+  key      = "AWS_REGION"
+  value    = "us-east-1"
+  category = "env"
+
+  description = "The AWS region."
+}
