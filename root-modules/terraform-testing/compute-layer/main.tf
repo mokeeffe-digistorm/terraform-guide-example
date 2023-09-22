@@ -12,8 +12,6 @@ provider "aws" {
 }
 
 data "aws_vpc" "my_vpc" {
-  most_recent = true
-
   tags = {
     Name = "digistorm-dev-us-vpc"
   }
