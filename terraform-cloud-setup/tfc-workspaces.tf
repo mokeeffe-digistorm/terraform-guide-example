@@ -1,6 +1,6 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
+# Terraform Cloud provider
+#
+# https://registry.terraform.io/providers/hashicorp/tfe/latest/docs
 provider "tfe" {
   hostname = var.tfc_hostname
 }
