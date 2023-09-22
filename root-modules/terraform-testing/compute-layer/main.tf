@@ -1,5 +1,11 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+terraform {
+  cloud {
+    organization = "Digistorm"
+    workspaces {
+      name = "testing-compute-layer"
+    }
+  }
+}
 
 provider "aws" {
   region = var.region
