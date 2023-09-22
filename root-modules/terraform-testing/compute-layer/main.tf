@@ -17,7 +17,7 @@ data "aws_vpc" "my_vpc" {
   }
 }
 data "aws_subnet" "my_private_subnet" {
-  vpc_id     = data.aws_vpc.my_vpc.id
+  vpc_id            = data.aws_vpc.my_vpc.id
   availability_zone = "us-east-1a"
 
   tags = {
@@ -44,7 +44,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "ubuntu" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
-  subnet_id   = data.aws_subnet.my_private_subnet.id
+  subnet_id     = data.aws_subnet.my_private_subnet.id
 
   tags = {
     Name = var.instance_name
