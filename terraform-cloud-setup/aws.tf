@@ -3,7 +3,7 @@
 
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
 }
 
 # Data source used to grab the TLS certificate for Terraform Cloud.

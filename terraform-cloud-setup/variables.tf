@@ -1,5 +1,7 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+variable "region" {
+  description = "AWS region"
+  default     = "us-east-1"
+}
 
 variable "tfc_aws_audience" {
   type        = string
@@ -25,8 +27,21 @@ variable "tfc_project_name" {
 }
 
 variable "tfc_workspaces" {
-  type        = list(string)
+  type        = map(any)
   description = "Terraform Cloud Workspaces"
-  default     = ["network-layer", "compute-layer"]
+  default     = {
+    testing-network-layer = {
+      working_directory = "root-modules/terraform-testing/network-layer"
+    }
+    testing-compute-layer = {
+      working_directory = "root-modules/terraform-testing/compute-layer"
+    }
+  }
+}
+
+variable "tfc_workspace_dependencies" {
+  type        = list(list(string))
+  description = "Terraform Cloud Workspace Dependencies (Run Triggers) defined as [{workspace}, {depends on}]"
+  default     = [["testing-compute-layer", "testing-network-layer"]]
 }
 
