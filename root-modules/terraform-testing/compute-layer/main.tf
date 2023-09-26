@@ -17,11 +17,11 @@ provider "aws" {
   region = var.region
   default_tags {
     tags = {
-      TFSource         = "root-modules/terraform-testing/compute-layer"
-      TFCloudWorkspace = "testing-compute-layer"
-      Environment      = "testing"
-      Project          = "terraform-testing"
-      Layer            = "compute-layer"
+      "ds:TerraformSource"         = "root-modules/terraform-testing/compute-layer"
+      "ds:TerraformCloudWorkspace" = "testing-compute-layer"
+      "ds:TerraformLayer"          = "compute-layer"
+      "ds:Environment"             = "testing"
+      "ds:Application"             = "terraform-testing"
     }
   }
 }
@@ -72,6 +72,8 @@ resource "aws_instance" "ubuntu" {
   subnet_id     = data.aws_subnet.my_private_subnet.id
 
   tags = {
-    Name = var.instance_name
+    Name                        = var.instance_name
+    "ds:CodeDeploy-Application" = "Deployment-Test"
+    "ds:CodeDeploy-Group"       = "Web-Server"
   }
 }

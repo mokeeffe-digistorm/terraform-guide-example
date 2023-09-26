@@ -17,11 +17,11 @@ provider "aws" {
   region = var.region
   default_tags {
     tags = {
-      TFSource         = "root-modules/terraform-testing/network-layer"
-      TFCloudWorkspace = "testing-network-layer"
-      Environment      = "testing"
-      Project          = "terraform-testing"
-      Layer            = "network-layer"
+      "ds:TerraformSource"         = "root-modules/terraform-testing/network-layer"
+      "ds:TerraformCloudWorkspace" = "testing-network-layer"
+      "ds:TerraformLayer"          = "network-layer"
+      "ds:Environment"             = "testing"
+      "ds:Application"             = "terraform-testing"
     }
   }
 }
@@ -41,9 +41,9 @@ resource "aws_vpc" "main" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
 resource "aws_subnet" "public_subnets" {
-  count      = length(var.public_subnet_cidrs)
-  vpc_id     = aws_vpc.main.id
-  cidr_block = element(var.public_subnet_cidrs, count.index)
+  count             = length(var.public_subnet_cidrs)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = element(var.public_subnet_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
 
   tags = {
@@ -51,9 +51,9 @@ resource "aws_subnet" "public_subnets" {
   }
 }
 resource "aws_subnet" "private_subnets" {
-  count      = length(var.private_subnet_cidrs)
-  vpc_id     = aws_vpc.main.id
-  cidr_block = element(var.private_subnet_cidrs, count.index)
+  count             = length(var.private_subnet_cidrs)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = element(var.private_subnet_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
 
   tags = {
@@ -61,9 +61,9 @@ resource "aws_subnet" "private_subnets" {
   }
 }
 resource "aws_subnet" "secure_subnets" {
-  count      = length(var.secure_subnet_cidrs)
-  vpc_id     = aws_vpc.main.id
-  cidr_block = element(var.secure_subnet_cidrs, count.index)
+  count             = length(var.secure_subnet_cidrs)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = element(var.secure_subnet_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
 
   tags = {
@@ -104,7 +104,7 @@ resource "aws_route_table" "public_rt" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 resource "aws_route_table_association" "public_subnet_asso" {
-  count = length(var.public_subnet_cidrs)
+  count          = length(var.public_subnet_cidrs)
   subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
   route_table_id = aws_route_table.public_rt.id
 }
