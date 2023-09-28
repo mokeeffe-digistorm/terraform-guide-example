@@ -41,33 +41,33 @@ resource "aws_vpc" "main_vpc" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
 resource "aws_subnet" "public_subnets" {
-  count             = length(local.public_subnet_cidrs)
+  for_each          = local.public_subnet_cidrs
   vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = element(local.public_subnet_cidrs, count.index)
-  availability_zone = element(var.azs, count.index)
+  cidr_block        = each.value
+  availability_zone = local.availability_zones[each.key]
 
   tags = {
-    Name = "digistorm-dev-us-public-sn-${count.index + 1}"
+    Name = "digistorm-dev-us-public-sn-${each.key}"
   }
 }
 resource "aws_subnet" "private_subnets" {
-  count             = length(local.private_subnet_cidrs)
+  for_each          = local.private_subnet_cidrs
   vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = element(local.private_subnet_cidrs, count.index)
-  availability_zone = element(var.azs, count.index)
+  cidr_block        = each.value
+  availability_zone = local.availability_zones[each.key]
 
   tags = {
-    Name = "digistorm-dev-us-private-sn-${count.index + 1}"
+    Name = "digistorm-dev-us-private-sn-${each.key}"
   }
 }
 resource "aws_subnet" "secure_subnets" {
-  count             = length(local.secure_subnet_cidrs)
+  for_each          = local.secure_subnet_cidrs
   vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = element(local.secure_subnet_cidrs, count.index)
-  availability_zone = element(var.azs, count.index)
+  cidr_block        = each.value
+  availability_zone = local.availability_zones[each.key]
 
   tags = {
-    Name = "digistorm-dev-us-secure-sn-${count.index + 1}"
+    Name = "digistorm-dev-us-secure-sn-${each.key}"
   }
 }
 
@@ -102,7 +102,7 @@ resource "aws_default_network_acl" "default_nacl" {
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl
 resource "aws_network_acl" "public_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = aws_subnet.public_subnets[*].id
+  subnet_ids = [ for s in aws_subnet.public_subnets : s.id]
   ingress {
     protocol   = -1
     rule_no    = 100
@@ -125,7 +125,7 @@ resource "aws_network_acl" "public_nacl" {
 }
 resource "aws_network_acl" "private_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = aws_subnet.private_subnets[*].id
+  subnet_ids = [ for s in aws_subnet.private_subnets : s.id]
   ingress {
     protocol   = -1
     rule_no    = 100
@@ -148,7 +148,7 @@ resource "aws_network_acl" "private_nacl" {
 }
 resource "aws_network_acl" "secure_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = aws_subnet.secure_subnets[*].id
+  subnet_ids = [ for s in aws_subnet.secure_subnets : s.id]
   ingress {
     protocol   = -1
     rule_no    = 100
@@ -227,7 +227,7 @@ resource "aws_route_table" "public_rt" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 resource "aws_route_table_association" "public_subnet_assoc" {
-  count          = length(local.public_subnet_cidrs)
-  subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
+  for_each       = local.public_subnet_cidrs
+  subnet_id      = aws_subnet.public_subnets[each.key].id
   route_table_id = aws_route_table.public_rt.id
 }
