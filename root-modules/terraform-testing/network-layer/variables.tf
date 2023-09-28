@@ -2,6 +2,10 @@ variable "region" {
   description = "AWS region"
   default     = "us-east-1"
 }
+variable "name_prefix" {
+  description = "Prefix for names of all VPC resources e.g. \"digistorm-prod-au\""
+  default     = "digistorm-dev-us"
+}
 variable "subnet_first_two_octets" {
   type        = string
   description = "First two octets of subnet IP ranges e.g. \"10.100\" for subnets with CIDR like \"10.100.0.0/20\"."

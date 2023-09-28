@@ -33,7 +33,7 @@ resource "aws_vpc" "main_vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "digistorm-dev-us-vpc"
+    Name = "${var.name_prefix}-vpc"
   }
 }
 
@@ -47,7 +47,7 @@ resource "aws_subnet" "public_subnets" {
   availability_zone = local.availability_zones[each.key]
 
   tags = {
-    Name = "digistorm-dev-us-public-sn-${each.key}"
+    Name = "${var.name_prefix}-public-sn-${each.key}"
   }
 }
 resource "aws_subnet" "private_subnets" {
@@ -57,7 +57,7 @@ resource "aws_subnet" "private_subnets" {
   availability_zone = local.availability_zones[each.key]
 
   tags = {
-    Name = "digistorm-dev-us-private-sn-${each.key}"
+    Name = "${var.name_prefix}-private-sn-${each.key}"
   }
 }
 resource "aws_subnet" "secure_subnets" {
@@ -67,7 +67,7 @@ resource "aws_subnet" "secure_subnets" {
   availability_zone = local.availability_zones[each.key]
 
   tags = {
-    Name = "digistorm-dev-us-secure-sn-${each.key}"
+    Name = "${var.name_prefix}-secure-sn-${each.key}"
   }
 }
 
@@ -120,7 +120,7 @@ resource "aws_network_acl" "public_nacl" {
     to_port    = 0
   }
   tags = {
-    Name = "digistorm-dev-us-public-nacl"
+    Name = "${var.name_prefix}-public-nacl"
   }
 }
 resource "aws_network_acl" "private_nacl" {
@@ -143,7 +143,7 @@ resource "aws_network_acl" "private_nacl" {
     to_port    = 0
   }
   tags = {
-    Name = "digistorm-dev-us-private-nacl"
+    Name = "${var.name_prefix}-private-nacl"
   }
 }
 resource "aws_network_acl" "secure_nacl" {
@@ -166,7 +166,7 @@ resource "aws_network_acl" "secure_nacl" {
     to_port    = 0
   }
   tags = {
-    Name = "digistorm-dev-us-secure-nacl"
+    Name = "${var.name_prefix}-secure-nacl"
   }
 }
 
@@ -202,7 +202,7 @@ resource "aws_internet_gateway" "main_ig" {
   vpc_id = aws_vpc.main_vpc.id
 
   tags = {
-    Name = "digistorm-dev-us-ig"
+    Name = "${var.name_prefix}-ig"
   }
 }
 
@@ -219,7 +219,7 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    Name = "digistorm-dev-public-route-table"
+    Name = "${var.name_prefix}-public-route-table"
   }
 }
 
