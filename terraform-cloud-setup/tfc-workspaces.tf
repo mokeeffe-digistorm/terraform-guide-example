@@ -14,6 +14,7 @@ resource "tfe_workspace" "workspaces" {
   name              = each.key
   organization      = var.tfc_organization_name
   working_directory = each.value.working_directory
+  tag_names         = tolist(each.value.tag_names)
   vcs_repo {
     github_app_installation_id = "ghain-SnFX2gGE4JVJ6KT7"
     identifier                 = "mokeeffe-digistorm/terraform-guide-example"
@@ -25,9 +26,9 @@ resource "tfe_workspace" "workspaces" {
 #
 # https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/run_trigger
 resource "tfe_run_trigger" "run_triggers" {
-  count = length(var.tfc_workspace_dependencies)
+  count         = length(var.tfc_workspace_dependencies)
   # Get the ID of the workspace by using the value of the workspace dependency at index 0
-  workspace_id = tfe_workspace.workspaces[element(element(var.tfc_workspace_dependencies, count.index), 0)].id
+  workspace_id  = tfe_workspace.workspaces[element(element(var.tfc_workspace_dependencies, count.index), 0)].id
   # Get the ID of the "sourceable" workspace by using the value of the workspace dependency at index 1
   sourceable_id = tfe_workspace.workspaces[element(element(var.tfc_workspace_dependencies, count.index), 1)].id
 }

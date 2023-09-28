@@ -29,7 +29,7 @@ provider "aws" {
 # Configure VPC
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc
-resource "aws_vpc" "main" {
+resource "aws_vpc" "main_vpc" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -41,9 +41,9 @@ resource "aws_vpc" "main" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
 resource "aws_subnet" "public_subnets" {
-  count             = length(var.public_subnet_cidrs)
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = element(var.public_subnet_cidrs, count.index)
+  count             = length(local.public_subnet_cidrs)
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = element(local.public_subnet_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
 
   tags = {
@@ -51,9 +51,9 @@ resource "aws_subnet" "public_subnets" {
   }
 }
 resource "aws_subnet" "private_subnets" {
-  count             = length(var.private_subnet_cidrs)
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = element(var.private_subnet_cidrs, count.index)
+  count             = length(local.private_subnet_cidrs)
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = element(local.private_subnet_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
 
   tags = {
@@ -61,9 +61,9 @@ resource "aws_subnet" "private_subnets" {
   }
 }
 resource "aws_subnet" "secure_subnets" {
-  count             = length(var.secure_subnet_cidrs)
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = element(var.secure_subnet_cidrs, count.index)
+  count             = length(local.secure_subnet_cidrs)
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = element(local.secure_subnet_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
 
   tags = {
@@ -71,12 +71,135 @@ resource "aws_subnet" "secure_subnets" {
   }
 }
 
+# Rename default Network ACL to "DO NOT USE. DO NOT ADD RULES."
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/default_network_acl
+resource "aws_default_network_acl" "default_nacl" {
+  default_network_acl_id = aws_vpc.main_vpc.default_network_acl_id
+  ingress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  tags = {
+    Name = "DO NOT USE. DO NOT ADD RULES."
+  }
+}
+
+# Network ACL for each subnet
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl
+resource "aws_network_acl" "public_nacl" {
+  vpc_id     = aws_vpc.main_vpc.id
+  subnet_ids = aws_subnet.public_subnets[*].id
+  ingress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  tags = {
+    Name = "digistorm-dev-us-public-nacl"
+  }
+}
+resource "aws_network_acl" "private_nacl" {
+  vpc_id     = aws_vpc.main_vpc.id
+  subnet_ids = aws_subnet.private_subnets[*].id
+  ingress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  tags = {
+    Name = "digistorm-dev-us-private-nacl"
+  }
+}
+resource "aws_network_acl" "secure_nacl" {
+  vpc_id     = aws_vpc.main_vpc.id
+  subnet_ids = aws_subnet.secure_subnets[*].id
+  ingress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  tags = {
+    Name = "digistorm-dev-us-secure-nacl"
+  }
+}
+
+# Add ingress/egress rules to secure subnet Network ACL to block traffic to/from public subnet
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl_rule
+resource "aws_network_acl_rule" "secure_ingress_nacl" {
+  network_acl_id = aws_network_acl.secure_nacl.id
+  protocol       = -1
+  rule_number    = 90
+  rule_action    = "deny"
+  cidr_block     = "${var.subnet_first_two_octets}.0.0/18" # This CIDR covers all three public subnets
+  from_port      = 0
+  to_port        = 0
+  egress         = false
+}
+resource "aws_network_acl_rule" "secure_egress_nacl" {
+  network_acl_id = aws_network_acl.secure_nacl.id
+  protocol       = -1
+  rule_number    = 90
+  rule_action    = "deny"
+  cidr_block     = "${var.subnet_first_two_octets}.0.0/18" # This CIDR covers all three public subnets
+  from_port      = 0
+  to_port        = 0
+  egress         = true
+}
+
 
 # Configure Internet Gateway
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
+resource "aws_internet_gateway" "main_ig" {
+  vpc_id = aws_vpc.main_vpc.id
 
   tags = {
     Name = "digistorm-dev-us-ig"
@@ -88,11 +211,11 @@ resource "aws_internet_gateway" "gw" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table
 resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main_vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
+    gateway_id = aws_internet_gateway.main_ig.id
   }
 
   tags = {
@@ -103,8 +226,8 @@ resource "aws_route_table" "public_rt" {
 # Configure Route Table Association
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
-resource "aws_route_table_association" "public_subnet_asso" {
-  count          = length(var.public_subnet_cidrs)
+resource "aws_route_table_association" "public_subnet_assoc" {
+  count          = length(local.public_subnet_cidrs)
   subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
   route_table_id = aws_route_table.public_rt.id
 }

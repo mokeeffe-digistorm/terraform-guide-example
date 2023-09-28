@@ -2,27 +2,31 @@ variable "region" {
   description = "AWS region"
   default     = "us-east-1"
 }
-
-variable "public_subnet_cidrs" {
-  type        = list(string)
-  description = "Public Subnet CIDR values"
-  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+variable "subnet_first_two_octets" {
+  type        = string
+  description = "First two octets of subnet IP ranges e.g. \"10.100\" for subnets with CIDR like \"10.100.0.0/20\"."
+  default     = "10.0"
 }
-
-variable "private_subnet_cidrs" {
-  type        = list(string)
-  description = "Private Subnet CIDR values"
-  default     = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
-}
-
-variable "secure_subnet_cidrs" {
-  type        = list(string)
-  description = "Secure Subnet CIDR values"
-  default     = ["10.0.21.0/24", "10.0.22.0/24", "10.0.23.0/24"]
-}
-
 variable "azs" {
   type        = list(string)
   description = "Availability Zones"
   default     = ["us-east-1a", "us-east-1b", "us-east-1c"]
+}
+
+locals {
+  public_subnet_cidrs = [
+    "${var.subnet_first_two_octets}.0.0/20",
+    "${var.subnet_first_two_octets}.16.0/20",
+    "${var.subnet_first_two_octets}.32.0/20",
+  ]
+  private_subnet_cidrs = [
+    "${var.subnet_first_two_octets}.64.0/20",
+    "${var.subnet_first_two_octets}.80.0/20",
+    "${var.subnet_first_two_octets}.96.0/20",
+  ]
+  secure_subnet_cidrs = [
+    "${var.subnet_first_two_octets}.128.0/20",
+    "${var.subnet_first_two_octets}.144.0/20",
+    "${var.subnet_first_two_octets}.160.0/20",
+  ]
 }

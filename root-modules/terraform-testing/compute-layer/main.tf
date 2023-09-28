@@ -73,7 +73,7 @@ resource "aws_instance" "ubuntu" {
 
   tags = {
     Name                        = var.instance_name
-    "ds:CodeDeploy-Application" = "Deployment-Test"
-    "ds:CodeDeploy-Group"       = "Web-Server"
+    "ds:CodeDeployApplication" = "Deployment-Test"
+    "ds:CodeDeployGroup"       = "Web-Server"
   }
 }

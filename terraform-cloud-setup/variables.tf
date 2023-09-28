@@ -32,9 +32,11 @@ variable "tfc_workspaces" {
   default     = {
     testing-network-layer = {
       working_directory = "root-modules/terraform-testing/network-layer"
+      tag_names = ["testing", "network-layer"]
     }
     testing-compute-layer = {
       working_directory = "root-modules/terraform-testing/compute-layer"
+      tag_names = ["testing", "compute-layer"]
     }
   }
 }
