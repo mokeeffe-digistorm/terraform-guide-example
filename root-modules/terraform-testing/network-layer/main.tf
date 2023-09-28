@@ -102,7 +102,7 @@ resource "aws_default_network_acl" "default_nacl" {
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl
 resource "aws_network_acl" "public_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = [ for s in aws_subnet.public_subnets : s.id]
+  subnet_ids = [for s in aws_subnet.public_subnets : s.id]
   ingress {
     protocol   = -1
     rule_no    = 100
@@ -125,7 +125,7 @@ resource "aws_network_acl" "public_nacl" {
 }
 resource "aws_network_acl" "private_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = [ for s in aws_subnet.private_subnets : s.id]
+  subnet_ids = [for s in aws_subnet.private_subnets : s.id]
   ingress {
     protocol   = -1
     rule_no    = 100
@@ -148,7 +148,25 @@ resource "aws_network_acl" "private_nacl" {
 }
 resource "aws_network_acl" "secure_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = [ for s in aws_subnet.secure_subnets : s.id]
+  subnet_ids = [for s in aws_subnet.secure_subnets : s.id]
+  # Add ingress/egress rules to secure subnet Network ACL to block traffic to/from public subnet
+  ingress {
+    protocol   = -1
+    rule_no    = 90
+    action     = "deny"
+    cidr_block = "${var.subnet_first_two_octets}.0.0/18" # This CIDR covers all three public subnets
+    from_port  = 0
+    to_port    = 0
+  }
+  egress {
+    protocol   = -1
+    rule_no    = 90
+    action     = "deny"
+    cidr_block = "${var.subnet_first_two_octets}.0.0/18" # This CIDR covers all three public subnets
+    from_port  = 0
+    to_port    = 0
+  }
+  # Default ingress/egress rules
   ingress {
     protocol   = -1
     rule_no    = 100
@@ -170,30 +188,6 @@ resource "aws_network_acl" "secure_nacl" {
   }
 }
 
-# Add ingress/egress rules to secure subnet Network ACL to block traffic to/from public subnet
-#
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl_rule
-resource "aws_network_acl_rule" "secure_ingress_nacl" {
-  network_acl_id = aws_network_acl.secure_nacl.id
-  protocol       = -1
-  rule_number    = 90
-  rule_action    = "deny"
-  cidr_block     = "${var.subnet_first_two_octets}.0.0/18" # This CIDR covers all three public subnets
-  from_port      = 0
-  to_port        = 0
-  egress         = false
-}
-resource "aws_network_acl_rule" "secure_egress_nacl" {
-  network_acl_id = aws_network_acl.secure_nacl.id
-  protocol       = -1
-  rule_number    = 90
-  rule_action    = "deny"
-  cidr_block     = "${var.subnet_first_two_octets}.0.0/18" # This CIDR covers all three public subnets
-  from_port      = 0
-  to_port        = 0
-  egress         = true
-}
-
 
 # Configure Internet Gateway
 #
@@ -206,6 +200,49 @@ resource "aws_internet_gateway" "main_ig" {
   }
 }
 
+# Configure Elastic IP For NAT Gateway
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip
+resource "aws_eip" "nat_gateway_eip" {
+  domain = "vpc"
+}
+output "nat_gateway_ip" {
+  value = aws_eip.nat_gateway_eip.public_ip
+}
+# Configure NAT Gateway in Public Subnet (A-Z "a")
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway
+resource "aws_nat_gateway" "nat_gateway" {
+  allocation_id = aws_eip.nat_gateway_eip.id
+  subnet_id     = aws_subnet.public_subnets["a"].id
+  tags = {
+    "Name" = "${var.name_prefix}-nat-gateway-a"
+  }
+}
+
+# Configure Private Route Table for NAT Gateway
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.nat_gateway.id
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-private-route-table"
+  }
+}
+# Configure Private Route Table Association
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
+resource "aws_route_table_association" "private_subnet_assoc" {
+  for_each       = local.public_subnet_cidrs
+  subnet_id      = aws_subnet.public_subnets[each.key].id
+  route_table_id = aws_route_table.public_rt.id
+}
 
 # Configure Public Route Table
 #
@@ -222,8 +259,7 @@ resource "aws_route_table" "public_rt" {
     Name = "${var.name_prefix}-public-route-table"
   }
 }
-
-# Configure Route Table Association
+# Configure Public Route Table Association
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 resource "aws_route_table_association" "public_subnet_assoc" {
