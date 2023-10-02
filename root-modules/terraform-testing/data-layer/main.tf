@@ -84,6 +84,13 @@ resource "aws_iam_role_policy_attachment" "instance_profile_attach" {
   role       = aws_iam_role.instance_profile_role.name
   policy_arn = aws_iam_policy.instance_profile_policy.arn
 }
+# Create Instance Profile for Role
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile
+resource "aws_iam_instance_profile" "instance_profile" {
+  name = "SSMInstanceProfile"
+  role = aws_iam_role.instance_profile_role.name
+}
 
 # Activate Default Host Management Configuration (DHMC)
 # https://docs.aws.amazon.com/systems-manager/latest/userguide/managed-instances-default-host-management.html#managed-instances-default-host-management-cli
