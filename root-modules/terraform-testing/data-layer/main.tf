@@ -43,16 +43,17 @@ resource "aws_ssm_parameter" "secret" {
   value       = var.bitbucket_private_key
 }
 
-# Add IAM Policy for instances managed by SSM
+
+# Add IAM Policy for instances
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy
 resource "aws_iam_policy" "instance_profile_policy" {
-  name        = "SSMInstanceProfilePolicy"
+  name        = "DigistormInstanceProfilePolicy"
   path        = "/"
-  description = "Instance Profile for EC2 Instances managed by SSM"
+  description = "Instance Profile for EC2 Instances"
 
   policy = templatefile("${path.module}/iam-policies/ssm-instance-profile.json", {
-    region = var.region
+    region                    = var.region
     ssm_output_s3_bucket_name = local.ssm_output_s3_bucket_name
   })
 }
@@ -73,7 +74,7 @@ data "aws_iam_policy_document" "assume_role_ec2" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
 resource "aws_iam_role" "instance_profile_role" {
-  name               = "SSMInstanceProfile"
+  name               = "DigistormInstanceProfile"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
 }
@@ -88,7 +89,7 @@ resource "aws_iam_role_policy_attachment" "instance_profile_attach" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile
 resource "aws_iam_instance_profile" "instance_profile" {
-  name = "SSMInstanceProfile"
+  name = "DigistormInstanceProfile"
   role = aws_iam_role.instance_profile_role.name
 }
 

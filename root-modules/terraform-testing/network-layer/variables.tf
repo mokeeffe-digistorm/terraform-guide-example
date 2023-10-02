@@ -33,4 +33,13 @@ locals {
     b = "${var.subnet_first_two_octets}.144.0/20",
     c = "${var.subnet_first_two_octets}.160.0/20",
   }
+  vpc_endpoint_services = [
+    "com.amazonaws.${var.region}.ssm",
+    "com.amazonaws.${var.region}.ec2messages",
+    "com.amazonaws.${var.region}.ec2",
+    "com.amazonaws.${var.region}.ssmmessages",
+    "com.amazonaws.${var.region}.kms",
+    "com.amazonaws.${var.region}.logs",
+  ]
+  vpc_endpoint_s3 = "com.amazonaws.${var.region}.s3"
 }

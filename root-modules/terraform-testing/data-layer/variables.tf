@@ -12,7 +12,7 @@ variable "bitbucket_private_key_ssm_parameter_path" {
 }
 variable "bitbucket_private_key" {
   description = "Private key value for Bitbucket deployment key. Use Terraform Cloud variable."
-  type = string
+  type        = string
 }
 
 locals {

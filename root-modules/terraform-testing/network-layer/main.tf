@@ -227,7 +227,7 @@ resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main_vpc.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.nat_gateway.id
   }
 
@@ -266,4 +266,60 @@ resource "aws_route_table_association" "public_subnet_assoc" {
   for_each       = local.public_subnet_cidrs
   subnet_id      = aws_subnet.public_subnets[each.key].id
   route_table_id = aws_route_table.public_rt.id
+}
+
+
+# Create Security Group for SSM VPC Endpoints
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+resource "aws_security_group" "vpc_ssm" {
+  name        = "vpc-ssm"
+  description = "Allow VPC Endpoints for Systems Manager"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+#    cidr_blocks      = [aws_vpc.main_vpc.cidr_block]
+#    ipv6_cidr_blocks = [aws_vpc.main_vpc.ipv6_cidr_block]
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "vpc-ssm"
+  }
+}
+
+
+# Create VPC Endpoints to enable PrivateLink for Systems Manager on private subnet
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint
+resource "aws_vpc_endpoint" "vpc_endpoint_interface" {
+  count               = length(local.vpc_endpoint_services)
+  vpc_id              = aws_vpc.main_vpc.id
+  service_name        = local.vpc_endpoint_services[count.index]
+  subnet_ids          = [for s in aws_subnet.private_subnets : s.id]
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+
+  security_group_ids = [
+    aws_security_group.vpc_ssm.id,
+  ]
+}
+resource "aws_vpc_endpoint" "vpc_endpoint_gateway" {
+  vpc_id            = aws_vpc.main_vpc.id
+  service_name      = local.vpc_endpoint_s3
+  subnet_ids        = [for s in aws_subnet.private_subnets : s.id]
+  vpc_endpoint_type = "Gateway"
 }
