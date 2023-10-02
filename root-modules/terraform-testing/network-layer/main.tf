@@ -311,7 +311,6 @@ resource "aws_vpc_endpoint" "vpc_endpoint_interface" {
   service_name        = local.vpc_endpoint_services[count.index]
   subnet_ids          = [for s in aws_subnet.private_subnets : s.id]
   vpc_endpoint_type   = "Interface"
-  private_dns_enabled = true
 
   security_group_ids = [
     aws_security_group.vpc_ssm.id,
@@ -320,6 +319,5 @@ resource "aws_vpc_endpoint" "vpc_endpoint_interface" {
 resource "aws_vpc_endpoint" "vpc_endpoint_gateway" {
   vpc_id            = aws_vpc.main_vpc.id
   service_name      = local.vpc_endpoint_s3
-  subnet_ids        = [for s in aws_subnet.private_subnets : s.id]
   vpc_endpoint_type = "Gateway"
 }
