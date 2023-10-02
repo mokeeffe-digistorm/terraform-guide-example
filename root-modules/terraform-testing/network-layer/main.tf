@@ -239,9 +239,9 @@ resource "aws_route_table" "private_rt" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 resource "aws_route_table_association" "private_subnet_assoc" {
-  for_each       = local.public_subnet_cidrs
-  subnet_id      = aws_subnet.public_subnets[each.key].id
-  route_table_id = aws_route_table.public_rt.id
+  for_each       = local.private_subnet_cidrs
+  subnet_id      = aws_subnet.private_subnets[each.key].id
+  route_table_id = aws_route_table.private_rt.id
 }
 
 # Configure Public Route Table
