@@ -34,6 +34,10 @@ variable "tfc_workspaces" {
       working_directory = "root-modules/terraform-testing/network-layer"
       tag_names = ["testing", "network-layer"]
     }
+    testing-data-layer = {
+      working_directory = "root-modules/terraform-testing/data-layer"
+      tag_names = ["testing", "data-layer"]
+    }
     testing-compute-layer = {
       working_directory = "root-modules/terraform-testing/compute-layer"
       tag_names = ["testing", "compute-layer"]
@@ -44,6 +48,9 @@ variable "tfc_workspaces" {
 variable "tfc_workspace_dependencies" {
   type        = list(list(string))
   description = "Terraform Cloud Workspace Dependencies (Run Triggers) defined as [{workspace}, {depends on}]"
-  default     = [["testing-compute-layer", "testing-network-layer"]]
+  default     = [
+    ["testing-data-layer", "testing-network-layer"],
+    ["testing-compute-layer", "testing-data-layer"]
+  ]
 }
 

@@ -68,7 +68,7 @@ data "aws_ami" "amazon_linux_2023" {
 
 # Create EC2 Instance
 #
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance.html
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance
 resource "aws_instance" "amazon_linux_2023" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = var.instance_type
@@ -78,5 +78,55 @@ resource "aws_instance" "amazon_linux_2023" {
     Name                        = var.instance_name
     "ds:CodeDeployApplication" = "Deployment-Test"
     "ds:CodeDeployGroup"       = "Web-Server"
+  }
+}
+
+# Create SSM Association - AWS-ApplyChefRecipes
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_association
+resource "aws_ssm_association" "example" {
+  name = "AWS-ApplyChefRecipes"
+
+  parameters = {
+    SourceType = "Git"
+    SourceInfo = jsonencode({
+      repository = var.chef_recipes_repository_name
+      getOptions = "branch:${var.chef_recipes_repository_branch}"
+      privateSSHKey = "{{ssm-secure:${bitbucket_private_key_ssm_parameter_path}}"
+    })
+    RunList: "recipe[ssm-test::setup]"
+    JsonAttributesContent = <<-EOT
+      {
+        "string-attribute": "TEST",
+        "array-attribute": [
+          "Another",
+          "Value"
+        ],
+        "bool-attribute": true,
+        "object-attribute": {
+          "first": "first",
+          "second": "second",
+          "third": "third"
+        }
+      }
+    EOT
+    ChefClientVersion = "17"
+    ComplianceSeverity = "Medium"
+    ComplianceType = "Custom:Chef"
+  }
+
+  output_location {
+    s3_bucket_name = local.ssm_output_s3_bucket_name
+    s3_key_prefix = "server-provisioning"
+    s3_region = var.region
+  }
+
+  targets {
+    key    = "tag:ds:Environment"
+    values = ["testing"]
+  }
+  targets {
+    key    = "tag:ds:Application"
+    values = ["terraform-testing"]
   }
 }
