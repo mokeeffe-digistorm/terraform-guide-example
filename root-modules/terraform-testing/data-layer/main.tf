@@ -65,10 +65,16 @@ data "aws_iam_policy_document" "assume_role_ec2" {
     effect = "Allow"
     principals {
       type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
+      identifiers = [
+        "ec2.amazonaws.com",
+        "ssm.amazonaws.com"
+      ]
     }
     actions = ["sts:AssumeRole"]
   }
+}
+data "aws_iam_policy" "aws_ssm_managed_instance_core" {
+  name = "AmazonSSMManagedInstanceCore"
 }
 # Create IAM Role
 #
@@ -84,6 +90,10 @@ resource "aws_iam_role" "instance_profile_role" {
 resource "aws_iam_role_policy_attachment" "instance_profile_attach" {
   role       = aws_iam_role.instance_profile_role.name
   policy_arn = aws_iam_policy.instance_profile_policy.arn
+}
+resource "aws_iam_role_policy_attachment" "instance_profile_attach_ssm" {
+  role       = aws_iam_role.instance_profile_role.name
+  policy_arn = data.aws_iam_policy.aws_ssm_managed_instance_core.arn
 }
 # Create Instance Profile for Role
 #
