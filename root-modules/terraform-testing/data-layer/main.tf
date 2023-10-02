@@ -39,3 +39,17 @@ resource "aws_ssm_parameter" "secret" {
   type        = "SecureString"
   value       = var.bitbucket_private_key
 }
+
+# Add IAM Policy for instances managed by SSM
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy
+resource "aws_iam_policy" "policy" {
+  name        = "SSMInstanceProfile"
+  path        = "/"
+  description = "Instance Profile for EC2 Instances managed by SSM"
+
+  policy = templatefile("${path.module}/templates/iam-ssm-instance-profile-policy.json", {
+    region = var.region
+    ssm_output_s3_bucket_name = local.ssm_output_s3_bucket_name
+  })
+}

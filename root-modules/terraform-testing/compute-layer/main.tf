@@ -44,7 +44,7 @@ data "aws_subnet" "my_private_subnet" {
   }
 }
 
-# Query AWS for the Ubuntu AMI
+# Query AWS for Amazon Linux 2023 AMI
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ami
 data "aws_ami" "amazon_linux_2023" {
@@ -73,6 +73,7 @@ resource "aws_instance" "amazon_linux_2023" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = var.instance_type
   subnet_id     = data.aws_subnet.my_private_subnet.id
+  iam_instance_profile = "SSMInstanceProfile"
 
   tags = {
     Name                        = var.instance_name
@@ -86,6 +87,7 @@ resource "aws_instance" "amazon_linux_2023" {
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_association
 resource "aws_ssm_association" "example" {
   name = "AWS-ApplyChefRecipes"
+  association_name = "${var.name_prefix}-run-chef-setup-recipe"
 
   parameters = {
     SourceType = "Git"
@@ -95,6 +97,7 @@ resource "aws_ssm_association" "example" {
       privateSSHKey = "{{ssm-secure:${var.bitbucket_private_key_ssm_parameter_path}}"
     })
     RunList: "recipe[ssm-test::setup]"
+    WhyRun: "False"
     JsonAttributesContent = <<-EOT
       {
         "string-attribute": "TEST",
