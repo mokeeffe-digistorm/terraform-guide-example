@@ -47,7 +47,7 @@ resource "aws_ssm_parameter" "secret" {
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy
 resource "aws_iam_policy" "policy" {
-  name        = "SSMInstanceProfile"
+  name        = "SSMInstanceProfilePolicy"
   path        = "/"
   description = "Instance Profile for EC2 Instances managed by SSM"
 
@@ -56,16 +56,50 @@ resource "aws_iam_policy" "policy" {
     ssm_output_s3_bucket_name = local.ssm_output_s3_bucket_name
   })
 }
+# Create IAM Role - Assume Role Policy for EC2
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy_document
+data "aws_iam_policy_document" "assume_role_ec2" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+# Create IAM Role
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
+resource "aws_iam_role" "role" {
+  name               = "SSMInstanceProfile"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
+}
 
 # Activate Default Host Management Configuration (DHMC)
 # https://docs.aws.amazon.com/systems-manager/latest/userguide/managed-instances-default-host-management.html#managed-instances-default-host-management-cli
 
+# Create IAM Role - Assume Role Policy for SSM
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy_document
+data "aws_iam_policy_document" "assume_role_ssm" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ssm.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
 # Create IAM Role
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
 resource "aws_iam_role" "AWSSystemsManagerDefaultEC2InstanceManagementRole" {
   name               = "AWSSystemsManagerDefaultEC2InstanceManagementRole"
-  assume_role_policy = templatefile("${path.module}/iam-policies/ssm-trust-relationship.json", {})
+  assume_role_policy = data.aws_iam_policy_document.assume_role_ssm.json
 }
 # Attache Policy to Role
 #
