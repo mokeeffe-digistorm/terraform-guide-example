@@ -47,27 +47,30 @@ data "aws_subnet" "my_private_subnet" {
 # Query AWS for the Ubuntu AMI
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ami
-data "aws_ami" "ubuntu" {
+data "aws_ami" "amazon_linux_2023" {
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["al2023-ami-2023*"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
   }
 
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-
-  owners = ["099720109477"] # Canonical
 }
 
 # Create EC2 Instance
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance.html
-resource "aws_instance" "ubuntu" {
-  ami           = data.aws_ami.ubuntu.id
+resource "aws_instance" "amazon_linux_2023" {
+  ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = var.instance_type
   subnet_id     = data.aws_subnet.my_private_subnet.id
 
