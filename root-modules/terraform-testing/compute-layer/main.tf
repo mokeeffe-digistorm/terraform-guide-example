@@ -92,7 +92,7 @@ resource "aws_ssm_association" "example" {
     SourceInfo = jsonencode({
       repository = var.chef_recipes_repository_name
       getOptions = "branch:${var.chef_recipes_repository_branch}"
-      privateSSHKey = "{{ssm-secure:${bitbucket_private_key_ssm_parameter_path}}"
+      privateSSHKey = "{{ssm-secure:${var.bitbucket_private_key_ssm_parameter_path}}"
     })
     RunList: "recipe[ssm-test::setup]"
     JsonAttributesContent = <<-EOT

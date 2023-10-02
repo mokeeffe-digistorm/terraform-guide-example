@@ -69,6 +69,8 @@ resource "aws_iam_policy" "tfc_policy" {
       {
         Action = [
           "ec2:*",
+          "s3:*",
+          "ssm:*",
         ]
         Effect   = "Allow"
         Resource = "*"
