@@ -26,6 +26,9 @@ provider "aws" {
   }
 }
 
+# The attribute `${data.aws_caller_identity.current.account_id}` will be current account number.
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "ssm_output_bucket" {
   bucket = local.ssm_output_s3_bucket_name
 }
@@ -48,8 +51,33 @@ resource "aws_iam_policy" "policy" {
   path        = "/"
   description = "Instance Profile for EC2 Instances managed by SSM"
 
-  policy = templatefile("${path.module}/templates/iam-ssm-instance-profile-policy.json", {
+  policy = templatefile("${path.module}/iam-policies/ssm-instance-profile.json", {
     region = var.region
     ssm_output_s3_bucket_name = local.ssm_output_s3_bucket_name
   })
+}
+
+# Activate Default Host Management Configuration (DHMC)
+# https://docs.aws.amazon.com/systems-manager/latest/userguide/managed-instances-default-host-management.html#managed-instances-default-host-management-cli
+
+# Create IAM Role
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
+resource "aws_iam_role" "AWSSystemsManagerDefaultEC2InstanceManagementRole" {
+  name               = "AWSSystemsManagerDefaultEC2InstanceManagementRole"
+  assume_role_policy = templatefile("${path.module}/iam-policies/ssm-trust-relationship.json", {})
+}
+# Attache Policy to Role
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment
+resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
+  role       = aws_iam_role.AWSSystemsManagerDefaultEC2InstanceManagementRole.name
+}
+# Create SSM Service Setting
+#
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_service_setting
+resource "aws_ssm_service_setting" "default_host_management" {
+  setting_id    = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/managed-instance/default-ec2-instance-management-role"
+  setting_value = "service-role/AWSSystemsManagerDefaultEC2InstanceManagementRole"
 }

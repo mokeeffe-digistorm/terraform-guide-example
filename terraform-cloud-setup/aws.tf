@@ -69,6 +69,7 @@ resource "aws_iam_policy" "tfc_policy" {
       {
         Action = [
           "ec2:*",
+          "iam:*",
           "s3:*",
           "ssm:*",
         ]
