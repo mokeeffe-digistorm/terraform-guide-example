@@ -3,7 +3,7 @@
 # https://developer.hashicorp.com/terraform/tutorials/cloud/cloud-migrate
 terraform {
   cloud {
-    organization = "Digistorm"
+    organization = "Digistorm-Dev"
     workspaces {
       name = "testing-compute-layer"
     }
