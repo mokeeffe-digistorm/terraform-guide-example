@@ -56,11 +56,6 @@ resource "aws_iam_policy" "instance_profile_policy" {
     ssm_output_s3_bucket_name = local.ssm_output_s3_bucket_name
   })
 }
-moved {
-  from = aws_iam_policy.policy
-  to = aws_iam_policy.instance_profile_policy
-}
-
 # Create IAM Role - Assume Role Policy for EC2
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy_document
@@ -82,11 +77,6 @@ resource "aws_iam_role" "instance_profile_role" {
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
 }
-moved {
-  from = aws_iam_role.role
-  to = aws_iam_role.instance_profile_role
-}
-
 # Attach Policy to Role
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment
