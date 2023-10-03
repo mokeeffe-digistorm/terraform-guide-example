@@ -40,7 +40,7 @@ data "aws_subnet" "my_private_subnet" {
   availability_zone = "us-east-1a"
 
   tags = {
-    Name = "digistorm-dev-us-public-sn-a"
+    Name = "digistorm-dev-us-private-sn-a"
   }
 }
 
