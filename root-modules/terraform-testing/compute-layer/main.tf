@@ -73,7 +73,6 @@ resource "aws_instance" "amazon_linux_2023" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = var.instance_type
   subnet_id     = data.aws_subnet.my_private_subnet.id
-  iam_instance_profile = "DigistormInstanceProfile"
 
   # Set these metadata options to ensure instance uses V2 Metadata Service (IMDSv2)
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html
