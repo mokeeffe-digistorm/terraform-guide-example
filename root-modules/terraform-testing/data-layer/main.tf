@@ -103,5 +103,5 @@ resource "aws_iam_role_policy_attachment" "DigistormInstanceProfilePolicy" {
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_service_setting
 resource "aws_ssm_service_setting" "default_host_management" {
   setting_id    = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/managed-instance/default-ec2-instance-management-role"
-  setting_value = "service-role/AWSSystemsManagerDefaultEC2InstanceManagementRole"
+  setting_value = "AWSSystemsManagerDefaultEC2InstanceManagementRole"
 }
