@@ -94,10 +94,6 @@ resource "aws_iam_role_policy_attachment" "instance_profile_attach" {
   role       = aws_iam_role.instance_profile_role.name
   policy_arn = aws_iam_policy.instance_profile_policy.arn
 }
-moved {
-  from = aws_iam_role_policy_attachment.instance_profile_attach_ssm
-  to = aws_iam_role_policy_attachment.instance_profile_attach_ssm_core
-}
 resource "aws_iam_role_policy_attachment" "instance_profile_attach_ssm_core" {
   role       = aws_iam_role.instance_profile_role.name
   policy_arn = data.aws_iam_policy.aws_ssm_managed_instance_core.arn
