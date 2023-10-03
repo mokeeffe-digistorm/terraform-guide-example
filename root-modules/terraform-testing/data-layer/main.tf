@@ -79,8 +79,8 @@ data "aws_iam_policy_document" "assume_role_ssm" {
 # Create IAM Role
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
-resource "aws_iam_role" "AWSSystemsManagerDefaultEC2InstanceManagementRole" {
-  name               = "AWSSystemsManagerDefaultEC2InstanceManagementRole"
+resource "aws_iam_role" "DigistormSystemsManagerDefaultEC2InstanceManagementRole" {
+  name               = "DigistormSystemsManagerDefaultEC2InstanceManagementRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_ssm.json
 }
 # Attach Policies to Role
@@ -88,20 +88,20 @@ resource "aws_iam_role" "AWSSystemsManagerDefaultEC2InstanceManagementRole" {
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment
 resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
-  role       = aws_iam_role.AWSSystemsManagerDefaultEC2InstanceManagementRole.name
+  role       = aws_iam_role.DigistormSystemsManagerDefaultEC2InstanceManagementRole.name
 }
 resource "aws_iam_role_policy_attachment" "AmazonSSMPatchAssociation" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMPatchAssociation"
-  role       = aws_iam_role.AWSSystemsManagerDefaultEC2InstanceManagementRole.name
+  role       = aws_iam_role.DigistormSystemsManagerDefaultEC2InstanceManagementRole.name
 }
 resource "aws_iam_role_policy_attachment" "DigistormInstanceProfilePolicy" {
   policy_arn = aws_iam_policy.instance_profile_policy.arn
-  role       = aws_iam_role.AWSSystemsManagerDefaultEC2InstanceManagementRole.name
+  role       = aws_iam_role.DigistormSystemsManagerDefaultEC2InstanceManagementRole.name
 }
 # Create SSM Service Setting
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_service_setting
 resource "aws_ssm_service_setting" "default_host_management" {
   setting_id    = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/managed-instance/default-ec2-instance-management-role"
-  setting_value = "service-role/AWSSystemsManagerDefaultEC2InstanceManagementRole"
+  setting_value = aws_iam_role.DigistormSystemsManagerDefaultEC2InstanceManagementRole.name
 }
