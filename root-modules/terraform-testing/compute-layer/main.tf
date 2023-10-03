@@ -82,54 +82,54 @@ resource "aws_instance" "amazon_linux_2023" {
   }
 }
 
-## Create SSM Association - AWS-ApplyChefRecipes
-##
-## https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_association
-#resource "aws_ssm_association" "run_chef_setup" {
-#  name = "AWS-ApplyChefRecipes"
-#  association_name = "${var.name_prefix}-run-chef-setup-recipe"
+# Create SSM Association - AWS-ApplyChefRecipes
 #
-#  parameters = {
-#    SourceType = "Git"
-#    SourceInfo = jsonencode({
-#      repository = var.chef_recipes_repository_name
-#      getOptions = "branch:${var.chef_recipes_repository_branch}"
-#      privateSSHKey = "{{ssm-secure:${var.bitbucket_private_key_ssm_parameter_path}}"
-#    })
-#    RunList: "recipe[ssm-test::setup]"
-#    WhyRun: "False"
-#    JsonAttributesContent = <<-EOT
-#      {
-#        "string-attribute": "TEST",
-#        "array-attribute": [
-#          "Another",
-#          "Value"
-#        ],
-#        "bool-attribute": true,
-#        "object-attribute": {
-#          "first": "first",
-#          "second": "second",
-#          "third": "third"
-#        }
-#      }
-#    EOT
-#    ChefClientVersion = "17"
-#    ComplianceSeverity = "Medium"
-#    ComplianceType = "Custom:Chef"
-#  }
-#
-#  output_location {
-#    s3_bucket_name = local.ssm_output_s3_bucket_name
-#    s3_key_prefix = "server-provisioning"
-#    s3_region = var.region
-#  }
-#
-#  targets {
-#    key    = "tag:ds:Environment"
-#    values = ["testing"]
-#  }
-#  targets {
-#    key    = "tag:ds:Application"
-#    values = ["terraform-testing"]
-#  }
-#}
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_association
+resource "aws_ssm_association" "run_chef_setup" {
+  name = "AWS-ApplyChefRecipes"
+  association_name = "${var.name_prefix}-run-chef-setup-recipe"
+
+  parameters = {
+    SourceType = "Git"
+    SourceInfo = jsonencode({
+      repository = var.chef_recipes_repository_name
+      getOptions = "branch:${var.chef_recipes_repository_branch}"
+      privateSSHKey = "{{ssm-secure:${var.bitbucket_private_key_ssm_parameter_path}}"
+    })
+    RunList: "recipe[ssm-test::setup]"
+    WhyRun: "False"
+    JsonAttributesContent = <<-EOT
+      {
+        "string-attribute": "TEST",
+        "array-attribute": [
+          "Another",
+          "Value"
+        ],
+        "bool-attribute": true,
+        "object-attribute": {
+          "first": "first",
+          "second": "second",
+          "third": "third"
+        }
+      }
+    EOT
+    ChefClientVersion = "17"
+    ComplianceSeverity = "Medium"
+    ComplianceType = "Custom:Chef"
+  }
+
+  output_location {
+    s3_bucket_name = local.ssm_output_s3_bucket_name
+    s3_key_prefix = "server-provisioning"
+    s3_region = var.region
+  }
+
+  targets {
+    key    = "tag:ds:Environment"
+    values = ["testing"]
+  }
+  targets {
+    key    = "tag:ds:Application"
+    values = ["terraform-testing"]
+  }
+}
