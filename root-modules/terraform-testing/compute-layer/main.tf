@@ -73,7 +73,14 @@ resource "aws_instance" "amazon_linux_2023" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = var.instance_type
   subnet_id     = data.aws_subnet.my_private_subnet.id
-  iam_instance_profile = "DigistormInstanceProfile"
+#  iam_instance_profile = "DigistormInstanceProfile"
+
+  # Set these metadata options to ensure instance uses V2 Metadata Service (IMDSv2)
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens = "required"
+  }
 
   tags = {
     Name                        = var.instance_name
@@ -94,7 +101,7 @@ resource "aws_ssm_association" "run_chef_setup" {
     SourceInfo = jsonencode({
       repository = var.chef_recipes_repository_name
       getOptions = "branch:${var.chef_recipes_repository_branch}"
-      privateSSHKey = "{{ssm-secure:${var.bitbucket_private_key_ssm_parameter_path}}"
+      privateSSHKey = "{{ ssm-secure:${var.bitbucket_private_key_ssm_parameter_path} }}"
     })
     RunList: "recipe[ssm-test::setup]"
     WhyRun: "False"
