@@ -89,7 +89,7 @@ resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPol
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
   role       = aws_iam_role.AWSSystemsManagerDefaultEC2InstanceManagementRole.name
 }
-resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPolicy" {
+resource "aws_iam_role_policy_attachment" "DigistormInstanceProfilePolicy" {
   policy_arn = aws_iam_policy.instance_profile_policy.arn
   role       = aws_iam_role.AWSSystemsManagerDefaultEC2InstanceManagementRole.name
 }
