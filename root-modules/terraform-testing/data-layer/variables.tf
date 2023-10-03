@@ -14,6 +14,12 @@ variable "bitbucket_private_key" {
   description = "Private key value for Bitbucket deployment key. Use Terraform Cloud variable."
   type        = string
 }
+variable "ssm_output_s3_bucket_force_destroy" {
+  description = "Allow destroy of S3 bucket when destroying Terraform. Will DELETE ALL OBJECTS."
+  type        = bool
+  default     = false
+}
+
 
 locals {
   ssm_output_s3_bucket_name = "${var.name_prefix}-ssm-logs"
