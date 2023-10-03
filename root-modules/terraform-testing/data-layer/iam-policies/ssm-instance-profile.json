@@ -12,6 +12,15 @@
         "arn:aws:s3:::${ssm_output_s3_bucket_name}/*",
         "arn:aws:s3:::${ssm_output_s3_bucket_name}"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameters"
+      ],
+      "Resource": [
+        "arn:aws:ssm:us-east-1:${account_id}:parameter/BitbucketKeys/AWSSystemsManager/private"
+      ]
     }
   ]
 }

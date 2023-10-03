@@ -53,7 +53,7 @@ resource "aws_iam_policy" "instance_profile_policy" {
   description = "Instance Profile for EC2 Instances"
 
   policy = templatefile("${path.module}/iam-policies/ssm-instance-profile.json", {
-    region                    = var.region
+    account_id = data.aws_caller_identity.current.account_id
     ssm_output_s3_bucket_name = local.ssm_output_s3_bucket_name
   })
 }
@@ -66,18 +66,11 @@ data "aws_iam_policy_document" "assume_role_ec2" {
     principals {
       type        = "Service"
       identifiers = [
-        "ec2.amazonaws.com",
-        "ssm.amazonaws.com"
+        "ec2.amazonaws.com"
       ]
     }
     actions = ["sts:AssumeRole"]
   }
-}
-data "aws_iam_policy" "aws_ssm_managed_instance_core" {
-  name = "AmazonSSMManagedInstanceCore"
-}
-data "aws_iam_policy" "aws_ssm_patch_association" {
-  name = "AmazonSSMPatchAssociation"
 }
 # Create IAM Role
 #
@@ -87,20 +80,12 @@ resource "aws_iam_role" "instance_profile_role" {
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
 }
-# Attach Policy to Role
+# Attach Policies to Role
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment
 resource "aws_iam_role_policy_attachment" "instance_profile_attach" {
   role       = aws_iam_role.instance_profile_role.name
   policy_arn = aws_iam_policy.instance_profile_policy.arn
-}
-resource "aws_iam_role_policy_attachment" "instance_profile_attach_ssm_core" {
-  role       = aws_iam_role.instance_profile_role.name
-  policy_arn = data.aws_iam_policy.aws_ssm_managed_instance_core.arn
-}
-resource "aws_iam_role_policy_attachment" "instance_profile_attach_ssm_patch" {
-  role       = aws_iam_role.instance_profile_role.name
-  policy_arn = data.aws_iam_policy.aws_ssm_patch_association.arn
 }
 # Create Instance Profile for Role
 #
@@ -109,6 +94,7 @@ resource "aws_iam_instance_profile" "instance_profile" {
   name = "DigistormInstanceProfile"
   role = aws_iam_role.instance_profile_role.name
 }
+
 
 # Activate Default Host Management Configuration (DHMC)
 # https://docs.aws.amazon.com/systems-manager/latest/userguide/managed-instances-default-host-management.html#managed-instances-default-host-management-cli
@@ -139,6 +125,10 @@ resource "aws_iam_role" "AWSSystemsManagerDefaultEC2InstanceManagementRole" {
 resource "aws_iam_role_policy_attachment" "AmazonSSMManagedEC2InstanceDefaultPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
   role       = aws_iam_role.AWSSystemsManagerDefaultEC2InstanceManagementRole.name
+}
+resource "aws_iam_role_policy_attachment" "instance_profile_attach_ssm_patch" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMPatchAssociation"
+  role       = aws_iam_role.instance_profile_role.name
 }
 # Create SSM Service Setting
 #
